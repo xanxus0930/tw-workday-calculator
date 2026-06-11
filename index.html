@@ -152,6 +152,12 @@ input:focus { border-color: var(--accent); }
   transition: all .15s;
 }
 .chip:hover, .chip.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.chip-tool { border-style: dashed; color: var(--muted2); }
+.chip-tool:hover { background: var(--card); border-color: var(--border2); color: var(--text); }
+.chip-x { margin-left: 4px; color: var(--holiday); font-weight: 800; cursor: pointer; }
+.chip.active .chip-x { color: var(--on-accent); }
+.chip-input-wrap { display: inline-flex; gap: 3px; align-items: center; }
+.chips .chip-input-wrap input { width: 56px; padding: 3px 7px; font-size: 11px; }
 
 .main {
   flex: 1;
@@ -200,8 +206,13 @@ input:focus { border-color: var(--accent); }
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
 }
+.cal-grid > div { background: var(--bg); }
 
 .cal-dow {
   text-align: center;
@@ -220,7 +231,7 @@ input:focus { border-color: var(--accent); }
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 5px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 500;
   color: var(--text);
@@ -431,19 +442,9 @@ input:focus { border-color: var(--accent); }
       </div>
 
       <div style="margin-bottom:8px">
-        <span class="lbl">工作天數</span>
+        <span class="lbl">工作天數 <em style="font-style:normal;font-size:9px;color:var(--muted2);font-weight:600;letter-spacing:0;text-transform:none">（可直接輸入或自訂快選）</em></span>
         <input type="number" id="calc-days" min="1" max="9999" value="30" oninput="onDaysInput()">
-        <div class="chips" id="chips-calc">
-          <button class="chip" onclick="setDays(1)">1天</button>
-          <button class="chip" onclick="setDays(3)">3天</button>
-          <button class="chip" onclick="setDays(5)">5天</button>
-          <button class="chip" onclick="setDays(7)">7天</button>
-          <button class="chip" onclick="setDays(10)">10天</button>
-          <button class="chip" onclick="setDays(14)">14天</button>
-          <button class="chip active" onclick="setDays(30)">30天</button>
-          <button class="chip" onclick="setDays(60)">60天</button>
-          <button class="chip" onclick="setDays(90)">90天</button>
-        </div>
+        <div class="chips" id="chips-calc"></div>
       </div>
     </div>
 
@@ -533,6 +534,17 @@ let calBaseYear, calBaseMonth;
 let calcState  = null;
 let countPhase = 0;
 
+const DEFAULT_PRESETS = [1,3,5,7,10,14,30,60,90];
+let presets   = loadPresets();
+let editMode  = false;
+let addingChip= false;
+
+function loadPresets() {
+  try { const s = JSON.parse(localStorage.getItem('wd_presets')); if (Array.isArray(s) && s.length) return s; } catch (e) {}
+  return [...DEFAULT_PRESETS];
+}
+function savePresets() { try { localStorage.setItem('wd_presets', JSON.stringify(presets)); } catch (e) {} }
+
 const todayISO  = () => toISO(new Date());
 const toISO     = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const parseDate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
@@ -565,7 +577,7 @@ function init() {
   document.getElementById('count-start').value = t;
   document.getElementById('count-end').value   = addDaysISO(t, 30);
   markQD(t);
-  highlightChip(30);
+  renderChips();
   refreshCalDisplay();
   const p = new URLSearchParams(location.search);
   if (p.get('start')) parseURL();
@@ -594,6 +606,7 @@ function buildMonthHTML(year, month) {
   const wdMap   = calcState?.wdMap || {};
   let cells = '';
   for (let i = 0; i < startWD; i++) cells += '<div></div>';
+  const trail = (7 - ((startWD + dim) % 7)) % 7;
   for (let d = 1; d <= dim; d++) {
     const iso  = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const date = parseDate(iso);
@@ -619,6 +632,7 @@ function buildMonthHTML(year, month) {
     const dattr = isHol ? ` data-hname="${hn}"` : '';
     cells += `<div class="${cls}"${dattr} onclick="pickDate('${iso}')">${badge}${d}</div>`;
   }
+  for (let i = 0; i < trail; i++) cells += '<div></div>';
   return `
     <div class="cal-month-title">${year} 年 ${MO[month]}</div>
     <div class="cal-grid">
@@ -666,11 +680,35 @@ function setDir(d) {
   document.getElementById('dir-before').classList.toggle('active', d === 'before');
   autoCalc();
 }
-function setDays(n) { document.getElementById('calc-days').value = n; highlightChip(n); autoCalc(); }
-function onDaysInput() { highlightChip(parseInt(document.getElementById('calc-days').value)); autoCalc(); }
-function highlightChip(n) {
-  document.querySelectorAll('#chips-calc .chip').forEach(c => c.classList.toggle('active', parseInt(c.textContent) === n));
+function setDays(n) { document.getElementById('calc-days').value = n; highlightChip(); autoCalc(); }
+function onDaysInput() { highlightChip(); autoCalc(); }
+function highlightChip() { if (!addingChip) renderChips(); }
+
+function renderChips() {
+  const cur = parseInt(document.getElementById('calc-days').value);
+  let html = presets.map(n =>
+    `<button class="chip${n===cur?' active':''}" onclick="setDays(${n})">${n}天${editMode?` <span class="chip-x" onclick="event.stopPropagation();removePreset(${n})">×</span>`:''}</button>`
+  ).join('');
+  if (addingChip) {
+    html += `<span class="chip-input-wrap"><input type="number" id="preset-input" min="1" max="9999" placeholder="天數" onkeydown="if(event.key==='Enter')commitAddChip();if(event.key==='Escape')cancelAddChip()"><button class="chip chip-tool" onclick="commitAddChip()">✓</button></span>`;
+  } else {
+    html += `<button class="chip chip-tool" onclick="startAddChip()">＋ 自訂</button>`;
+    html += `<button class="chip chip-tool" onclick="toggleEditChips()">${editMode?'完成':'編輯'}</button>`;
+  }
+  document.getElementById('chips-calc').innerHTML = html;
 }
+function startAddChip() { addingChip = true; editMode = false; renderChips(); document.getElementById('preset-input').focus(); }
+function cancelAddChip() { addingChip = false; renderChips(); }
+function commitAddChip() {
+  const v = parseInt(document.getElementById('preset-input').value);
+  addingChip = false;
+  if (v > 0 && v <= 9999) {
+    if (!presets.includes(v)) { presets.push(v); presets.sort((a,b)=>a-b); savePresets(); }
+    setDays(v);
+  } else { renderChips(); }
+}
+function removePreset(n) { presets = presets.filter(x => x !== n); savePresets(); renderChips(); }
+function toggleEditChips() { editMode = !editMode; addingChip = false; renderChips(); }
 function setToday()    { const t=todayISO();             document.getElementById('calc-start').value=t; markQD(t); autoCalc(); }
 function setTomorrow() { const t=addDaysISO(todayISO(),1); document.getElementById('calc-start').value=t; markQD(t); autoCalc(); }
 function clearQD() { markQD(document.getElementById('calc-start').value); }
@@ -797,7 +835,7 @@ function parseURL() {
   if (p.get('mode')==='count') setMode('count');
   if (p.get('dir'))   setDir(p.get('dir'));
   if (p.get('start')) { document.getElementById('calc-start').value=p.get('start'); document.getElementById('count-start').value=p.get('start'); markQD(p.get('start')); }
-  if (p.get('days'))  { document.getElementById('calc-days').value=p.get('days'); highlightChip(+p.get('days')); }
+  if (p.get('days'))  { document.getElementById('calc-days').value=p.get('days'); highlightChip(); }
   if (p.get('end'))   document.getElementById('count-end').value=p.get('end');
   setTimeout(calculate, 80);
 }
