@@ -4,140 +4,435 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>工作日計算器｜台灣國定假日</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --bg:#0b0c0f;--panel:#13151a;--card:#1a1d24;--border:#272b35;--border2:#353a47;
-  --accent:#f59e0b;--accent-d:#d97706;--text:#e2e4ea;--muted:#5e6575;--muted2:#8b94a8;
-  --holiday:#f43f5e;--weekend:#6366f1;--success:#10b981;--day-num:#f59e0b;--r:10px;
+  --bg:       #ffffff;
+  --panel:    #f9fafb;
+  --card:     #f3f4f6;
+  --border:   #e5e7eb;
+  --border2:  #d1d5db;
+  --accent:   #f59e0b;
+  --accent-d: #b45309;
+  --on-accent:#422006;
+  --text:     #1f2937;
+  --muted:    #9ca3af;
+  --muted2:   #6b7280;
+  --holiday:  #e11d48;
+  --weekend:  #4f46e5;
+  --success:  #059669;
+  --r:        7px;
 }
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
-.layout{display:flex;flex:1;min-height:100vh;}
-.sidebar{width:360px;min-width:320px;background:var(--panel);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;padding:28px 24px;gap:0;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
-.main{flex:1;overflow-y:auto;padding:32px 36px 64px;min-width:0;}
-@media(max-width:720px){.layout{flex-direction:column;}.sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);}.main{padding:24px 16px 48px;}}
-.sidebar-logo{margin-bottom:24px;}
-.sidebar-logo .tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:3px 10px;border-radius:999px;margin-bottom:10px;}
-.sidebar-logo h1{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;letter-spacing:-.025em;line-height:1.1;color:var(--text);}
-.sidebar-logo h1 span{color:var(--accent);}
-.sidebar-logo p{font-size:.78rem;color:var(--muted2);margin-top:6px;}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:20px;}
-.tab{padding:9px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;text-align:center;border:1px solid var(--border);border-radius:var(--r);background:none;color:var(--muted2);cursor:pointer;transition:all .18s;}
-.tab.active{background:var(--accent);border-color:var(--accent);color:#0b0c0f;font-weight:700;}
-.tab:hover:not(.active){border-color:var(--border2);color:var(--text);}
-.field{margin-bottom:16px;}
-label{display:block;font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
-.date-row{display:flex;gap:6px;align-items:center;}
-.date-row input[type="date"]{flex:1;}
-.quick-date{display:flex;flex-direction:column;gap:4px;}
-.btn-qd{font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;background:var(--card);border:1px solid var(--border);color:var(--muted2);padding:5px 8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .15s;line-height:1.2;}
-.btn-qd:hover,.btn-qd.active{background:var(--accent);border-color:var(--accent);color:#0b0c0f;font-weight:700;}
-input[type="date"],input[type="number"]{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;padding:10px 13px;outline:none;transition:border-color .18s;-webkit-appearance:none;}
-input[type="date"]:focus,input[type="number"]:focus{border-color:var(--accent);}
-.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
-.chip{font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;background:var(--card);border:1px solid var(--border);color:var(--muted2);padding:5px 11px;border-radius:999px;cursor:pointer;transition:all .15s;}
-.chip:hover,.chip.active{background:var(--accent);border-color:var(--accent);color:#0b0c0f;}
-.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.seg-btn{font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;padding:10px;text-align:center;background:none;border:none;color:var(--muted2);cursor:pointer;transition:all .18s;}
-.seg-btn+.seg-btn{border-left:1px solid var(--border);}
-.seg-btn.active{background:var(--card);color:var(--accent);font-weight:700;}
-.seg-btn:hover:not(.active){background:var(--card);color:var(--text);}
-.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:11px 13px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;}
-.toggle-row:hover{border-color:var(--border2);}
-.toggle-text{font-size:.82rem;color:var(--muted2);flex:1;}
-.toggle-text.on{color:var(--text);}
-.toggle{position:relative;width:40px;height:22px;flex-shrink:0;}
-.toggle input{opacity:0;width:0;height:0;}
-.slider{position:absolute;inset:0;background:var(--border2);border-radius:999px;transition:background .2s;}
-.slider::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;}
-.toggle input:checked~.slider{background:var(--accent);}
-.toggle input:checked~.slider::after{transform:translateX(18px);}
-.btn-calc{width:100%;padding:13px;background:var(--accent);border:none;border-radius:var(--r);color:#0b0c0f;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:opacity .18s,transform .1s;margin-top:4px;}
-.btn-calc:hover{opacity:.9;}
-.btn-calc:active{transform:scale(.98);}
-.divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
-.no-result{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;color:var(--muted);text-align:center;gap:12px;}
-.no-result .icon{font-size:3rem;opacity:.4;}
-.no-result p{font-size:.9rem;}
-.result-header{margin-bottom:28px;animation:fadeUp .35s ease both;}
-.result-from{font-size:.75rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
-.result-big{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:800;color:var(--accent);letter-spacing:-.03em;line-height:1;}
-.result-sub{font-size:.9rem;color:var(--muted2);margin-top:4px;}
-.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
-.stat{flex:1;min-width:100px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;animation:fadeUp .35s ease both;}
-.stat-n{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text);line-height:1;}
-.stat-n.acc{color:var(--accent);}
-.stat-n.hol{color:var(--holiday);}
-.stat-n.wkd{color:var(--weekend);}
-.stat-l{font-size:.68rem;color:var(--muted);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-.cal-section{margin-bottom:32px;animation:fadeUp .4s .1s ease both;}
-.cal-nav-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.cal-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-dow{text-align:center;font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:5px 0 8px;}
-.cal-dow.is-sun{color:var(--holiday);}
-.cal-dow.is-sat{color:var(--weekend);}
-.cal-cell{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--muted);cursor:default;transition:background .1s;}
-.cal-cell.is-today{color:var(--text);font-weight:700;}
-.cal-cell.is-today::before{content:'';position:absolute;bottom:3px;width:4px;height:4px;background:var(--accent);border-radius:50%;}
-.cal-cell.is-weekend{color:var(--weekend);}
-.cal-cell.is-holiday{color:var(--holiday);}
-.cal-cell.is-holiday::after{content:attr(data-hname);position:absolute;bottom:1px;font-size:.38rem;color:var(--holiday);opacity:.8;max-width:95%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.cal-cell.is-start{background:rgba(245,158,11,.25);color:var(--accent);font-weight:700;}
-.cal-cell.in-range{background:rgba(245,158,11,.07);color:var(--text);border-radius:0;}
-.cal-cell.is-result{background:var(--accent)!important;color:#0b0c0f!important;font-weight:800!important;border-radius:999px!important;font-family:'Syne',sans-serif;z-index:2;}
-.cal-cell.is-result .day-num-badge{display:none!important;}
-.day-num-badge{position:absolute;top:2px;right:3px;font-size:.46rem;font-weight:700;color:var(--day-num);opacity:.9;letter-spacing:.02em;font-family:'Syne',sans-serif;}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.72rem;color:var(--muted2);}
-.legend-item{display:flex;align-items:center;gap:5px;}
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.dot.acc{background:var(--accent);}
-.dot.hol{background:var(--holiday);}
-.dot.wkd{background:var(--weekend);}
-.dot.num{background:var(--day-num);}
-.share-bar{display:flex;gap:8px;align-items:center;padding-top:20px;border-top:1px solid var(--border);margin-top:8px;animation:fadeUp .4s .2s ease both;}
-.share-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:.75rem;padding:8px 11px;outline:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.btn-copy{font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;transition:all .18s;white-space:nowrap;}
-.btn-copy:hover{border-color:var(--accent);color:var(--accent);}
-.btn-copy.ok{border-color:var(--success);color:var(--success);}
-.months-wrap{display:grid;grid-template-columns:1fr;gap:32px;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+}
+
+.layout { display: flex; flex: 1; width: 100%; }
+
+.sidebar {
+  width: 248px;
+  min-width: 220px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.logo h1 { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
+.logo h1 span { color: var(--accent-d); }
+.logo p  { font-size: 11px; color: var(--muted2); margin-top: 1px; }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.tab {
+  padding: 6px 4px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: none;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.tab.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.tab:hover:not(.active) { border-color: var(--border2); color: var(--text); }
+
+.lbl {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.date-row { display: flex; gap: 4px; }
+.date-row input { flex: 1; min-width: 0; }
+.qd-col { display: flex; flex-direction: column; gap: 3px; }
+.btn-qd {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  padding: 3px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  line-height: 1.4;
+}
+.btn-qd:hover, .btn-qd.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+input[type="date"],
+input[type="number"] {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  outline: none;
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+input:focus { border-color: var(--accent); }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.seg-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 4px;
+  text-align: center;
+  background: none;
+  border: none;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+.seg-btn.active { background: var(--card); color: var(--accent-d); font-weight: 700; }
+.seg-btn:hover:not(.active) { background: var(--card); color: var(--text); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+.chip {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  padding: 3px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.chip:hover, .chip.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 24px;
+  min-width: 0;
+}
+
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cal-range-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.cal-nav-btns { display: flex; gap: 4px; }
+.cal-nav-btn {
+  width: 26px; height: 26px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.cal-nav-btn:hover { border-color: var(--accent); color: var(--accent-d); }
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.cal-month-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted2);
+  margin-bottom: 6px;
+  letter-spacing: .02em;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--muted);
+  padding: 2px 0 5px;
+}
+.cal-dow.is-sun { color: var(--holiday); }
+.cal-dow.is-sat { color: var(--weekend); }
+
+.cal-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .1s;
+  user-select: none;
+}
+.cal-cell:hover { background: var(--card); }
+.cal-cell.is-today { font-weight: 700; }
+.cal-cell.is-today::before {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 3px; height: 3px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.cal-cell.is-weekend { color: var(--weekend); }
+.cal-cell.is-holiday { color: var(--holiday); }
+.cal-cell.is-holiday::after {
+  content: attr(data-hname);
+  position: absolute;
+  bottom: 1px;
+  left: 0; right: 0;
+  font-size: 8px;
+  color: var(--holiday);
+  opacity: .8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  padding: 0 1px;
+}
+.cal-cell.is-start {
+  background: rgba(245,158,11,.20);
+  color: var(--accent-d);
+  font-weight: 700;
+}
+.cal-cell.in-range {
+  background: rgba(245,158,11,.10);
+}
+.cal-cell.is-result {
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
+  font-weight: 800 !important;
+  border-radius: 50% !important;
+}
+
+.day-num-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-d);
+  background: rgba(245,158,11,.18);
+  border-radius: 3px;
+  padding: 0 2px;
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+.cal-cell.is-result .day-num-badge { display: none; }
+
+.legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--muted2);
+  margin-bottom: 16px;
+}
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot.acc { background: var(--accent); }
+.dot.hol { background: var(--holiday); }
+.dot.wkd { background: var(--weekend); }
+.badge-samp {
+  display: inline-block;
+  width: 16px; height: 12px;
+  line-height: 1.45;
+  background: rgba(245,158,11,.18);
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-d);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  animation: fadeUp .28s ease both;
+}
+.result-from { font-size: 11px; color: var(--muted2); margin-bottom: 3px; }
+.result-big  { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; color: var(--accent-d); letter-spacing: -.02em; line-height: 1.1; }
+.result-sub  { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin-bottom: 10px;
+  animation: fadeUp .28s .05s ease both;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 9px 11px;
+}
+.stat-n { font-size: 1.25rem; font-weight: 700; line-height: 1.1; color: var(--text); }
+.stat-n.acc { color: var(--accent-d); }
+.stat-n.hol { color: var(--holiday); }
+.stat-n.wkd { color: var(--weekend); }
+.stat-l { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-top: 3px; }
+
+.share-bar {
+  display: flex;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  animation: fadeUp .28s .1s ease both;
+}
+.share-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--muted2);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 6px 9px;
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn-copy {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 11px;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-copy:hover { border-color: var(--accent); color: var(--accent-d); }
+.btn-copy.ok    { border-color: var(--success); color: var(--success); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .month-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border); }
+  .main { padding: 14px 14px 40px; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
+
 <div class="layout">
+
   <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="tag">🇹🇼 台灣</div>
+
+    <div class="logo">
       <h1>工作日<span>計算器</span></h1>
-      <p>含國定假日，週末自動排除</p>
+      <p>🇹🇼 含台灣國定假日（自動排除週末／假日）</p>
     </div>
+
     <div class="tabs">
-      <button class="tab active" id="tab-calc" onclick="setMode('calc')">📅 計算到期日</button>
-      <button class="tab" id="tab-count" onclick="setMode('count')">🔢 計算天數</button>
+      <button class="tab active" id="tab-calc"  onclick="setMode('calc')">📅 算到期日</button>
+      <button class="tab"        id="tab-count" onclick="setMode('count')">🔢 算天數</button>
     </div>
+
     <div id="panel-calc">
-      <div class="field">
-        <label>起始日期</label>
+      <div style="margin-bottom:10px">
+        <span class="lbl">起始日期 <em style="font-style:normal;font-size:9px;color:var(--accent-d);font-weight:700;letter-spacing:0;text-transform:none">← 可點行事曆選</em></span>
         <div class="date-row">
-          <input type="date" id="calc-start" onchange="clearQD()">
-          <div class="quick-date">
-            <button class="btn-qd" id="qd-today" onclick="setToday()">今天</button>
+          <input type="date" id="calc-start" onchange="clearQD();autoCalc()">
+          <div class="qd-col">
+            <button class="btn-qd" id="qd-today"    onclick="setToday()">今天</button>
             <button class="btn-qd" id="qd-tomorrow" onclick="setTomorrow()">明天</button>
           </div>
         </div>
       </div>
-      <div class="field">
-        <label>計算方向</label>
+
+      <div style="margin-bottom:10px">
+        <span class="lbl">計算方向</span>
         <div class="seg">
-          <button class="seg-btn active" id="dir-after" onclick="setDir('after')">往後推 →</button>
-          <button class="seg-btn" id="dir-before" onclick="setDir('before')">← 往前推</button>
+          <button class="seg-btn active" id="dir-after"  onclick="setDir('after')">往後推 →</button>
+          <button class="seg-btn"        id="dir-before" onclick="setDir('before')">← 往前推</button>
         </div>
       </div>
-      <div class="field">
-        <label>天數</label>
-        <input type="number" id="calc-days" min="1" max="9999" value="30" placeholder="輸入天數">
+
+      <div style="margin-bottom:8px">
+        <span class="lbl">工作天數</span>
+        <input type="number" id="calc-days" min="1" max="9999" value="30" oninput="onDaysInput()">
         <div class="chips" id="chips-calc">
           <button class="chip" onclick="setDays(1)">1天</button>
           <button class="chip" onclick="setDays(3)">3天</button>
@@ -145,92 +440,374 @@ input[type="date"]:focus,input[type="number"]:focus{border-color:var(--accent);}
           <button class="chip" onclick="setDays(7)">7天</button>
           <button class="chip" onclick="setDays(10)">10天</button>
           <button class="chip" onclick="setDays(14)">14天</button>
-          <button class="chip" onclick="setDays(30)">30天</button>
+          <button class="chip active" onclick="setDays(30)">30天</button>
           <button class="chip" onclick="setDays(60)">60天</button>
           <button class="chip" onclick="setDays(90)">90天</button>
         </div>
       </div>
     </div>
+
     <div id="panel-count" style="display:none">
-      <div class="field">
-        <label>起始日期</label>
+      <div style="margin-bottom:10px">
+        <span class="lbl">起始日期 <em id="count-hint" style="font-style:normal;font-size:9px;color:var(--accent-d);font-weight:700;letter-spacing:0;text-transform:none">← 點行事曆選</em></span>
         <div class="date-row">
-          <input type="date" id="count-start">
-          <div class="quick-date">
-            <button class="btn-qd" onclick="document.getElementById('count-start').value=todayISO()">今天</button>
-            <button class="btn-qd" onclick="document.getElementById('count-start').value=addDaysISO(todayISO(),1)">明天</button>
+          <input type="date" id="count-start" onchange="countPhase=2;autoCalc()">
+          <div class="qd-col">
+            <button class="btn-qd" onclick="document.getElementById('count-start').value=todayISO();countPhase=2;autoCalc()">今天</button>
+            <button class="btn-qd" onclick="document.getElementById('count-start').value=addDaysISO(todayISO(),1);countPhase=2;autoCalc()">明天</button>
           </div>
         </div>
       </div>
-      <div class="field">
-        <label>結束日期</label>
+      <div style="margin-bottom:8px">
+        <span class="lbl">結束日期</span>
         <div class="date-row">
-          <input type="date" id="count-end">
-          <div class="quick-date">
-            <button class="btn-qd" onclick="document.getElementById('count-end').value=addDaysISO(todayISO(),30)">+30天</button>
-            <button class="btn-qd" onclick="document.getElementById('count-end').value=addDaysISO(todayISO(),90)">+90天</button>
+          <input type="date" id="count-end" onchange="countPhase=2;autoCalc()">
+          <div class="qd-col">
+            <button class="btn-qd" onclick="document.getElementById('count-end').value=addDaysISO(todayISO(),30);countPhase=2;autoCalc()">+30天</button>
+            <button class="btn-qd" onclick="document.getElementById('count-end').value=addDaysISO(todayISO(),90);countPhase=2;autoCalc()">+90天</button>
           </div>
         </div>
       </div>
     </div>
-    <hr class="divider">
-    <div class="toggle-row" onclick="document.getElementById('work-toggle').click()">
-      <span class="toggle-text on" id="toggle-label">僅計算工作日</span>
-      <label class="toggle" onclick="event.stopPropagation()">
-        <input type="checkbox" id="work-toggle" checked onchange="updateToggleLabel()">
-        <span class="slider"></span>
-      </label>
-    </div>
-    <button class="btn-calc" onclick="calculate()">計　算</button>
+
   </aside>
-  <main class="main" id="main-area">
-    <div class="no-result" id="no-result">
-      <div class="icon">📅</div>
-      <p>請輸入條件後按「計算」</p>
+
+  <main class="main">
+
+    <div class="cal-toolbar">
+      <div class="cal-range-label" id="cal-range-label"></div>
+      <div class="cal-nav-btns">
+        <button class="cal-nav-btn" onclick="prevMonths()" title="上三個月">◀</button>
+        <button class="cal-nav-btn" onclick="nextMonths()" title="下三個月">▶</button>
+      </div>
     </div>
-    <div id="result-area" style="display:none"></div>
+
+    <div class="month-grid" id="month-grid"></div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="dot acc"></span> 起始／結果</span>
+      <span class="legend-item"><span class="badge-samp">1</span> 工作天序號</span>
+      <span class="legend-item"><span class="dot hol"></span> 國定假日</span>
+      <span class="legend-item"><span class="dot wkd"></span> 週末</span>
+    </div>
+
+    <div id="result-area"></div>
+
   </main>
+
 </div>
+
 <script>
-const TW_HOLIDAYS={'2024-01-01':'元旦','2024-02-08':'春節','2024-02-09':'春節','2024-02-10':'春節','2024-02-11':'春節','2024-02-12':'春節','2024-02-13':'春節','2024-02-14':'春節','2024-02-28':'和平紀念日','2024-04-04':'兒童節/清明','2024-04-05':'清明節','2024-05-01':'勞動節','2024-06-10':'端午節','2024-09-17':'中秋節','2024-10-10':'國慶日','2025-01-01':'元旦','2025-01-27':'春節','2025-01-28':'春節','2025-01-29':'春節','2025-01-30':'春節','2025-01-31':'春節','2025-02-01':'春節','2025-02-02':'春節','2025-02-28':'和平紀念日','2025-04-03':'兒童節','2025-04-04':'清明節','2025-05-01':'勞動節','2025-05-30':'端午補假','2025-05-31':'端午節','2025-10-06':'中秋節','2025-10-10':'國慶日','2026-01-01':'元旦','2026-02-17':'春節','2026-02-18':'春節','2026-02-19':'春節','2026-02-20':'春節','2026-02-21':'春節','2026-02-22':'春節','2026-02-23':'春節','2026-02-28':'和平紀念日','2026-04-04':'兒童節/清明','2026-05-01':'勞動節','2026-06-19':'端午節','2026-09-25':'中秋節','2026-10-10':'國慶日','2027-01-01':'元旦','2027-02-06':'春節','2027-02-07':'春節','2027-02-08':'春節','2027-02-09':'春節','2027-02-10':'春節','2027-02-11':'春節','2027-02-12':'春節','2027-02-28':'和平紀念日','2027-04-03':'兒童節','2027-04-05':'清明節','2027-05-01':'勞動節','2027-06-09':'端午節','2027-09-15':'中秋節','2027-10-10':'國慶日'};
-let mode='calc',dir='after';
-const todayISO=()=>toISO(new Date());
-const toISO=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${dd}`;};
-const parseDate=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
-const addDaysISO=(iso,n)=>{const d=parseDate(iso);d.setDate(d.getDate()+n);return toISO(d);};
-const diffDays=(a,b)=>Math.round((parseDate(b)-parseDate(a))/86400000);
-const isWeekend=d=>{const w=d.getDay();return w===0||w===6;};
-const isHoliday=d=>!!TW_HOLIDAYS[toISO(d)];
-const isWorkday=d=>!isWeekend(d)&&!isHoliday(d);
-const WEEKDAY_NAMES=['日','一','二','三','四','五','六'];
-const formatFull=iso=>{const d=parseDate(iso);return`${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日（${WEEKDAY_NAMES[d.getDay()]}）`;};
-function init(){const t=todayISO();document.getElementById('calc-start').value=t;document.getElementById('count-start').value=t;document.getElementById('count-end').value=addDaysISO(t,30);markQD(t);parseURL();}
-function parseURL(){const p=new URLSearchParams(location.search);if(p.get('mode')==='count')setMode('count');if(p.get('start')){document.getElementById('calc-start').value=p.get('start');document.getElementById('count-start').value=p.get('start');markQD(p.get('start'));}if(p.get('days')){document.getElementById('calc-days').value=p.get('days');highlightChip(+p.get('days'));}if(p.get('dir'))setDir(p.get('dir'));if(p.get('end'))document.getElementById('count-end').value=p.get('end');if(p.get('work')==='false')document.getElementById('work-toggle').checked=false;if(p.get('start'))setTimeout(calculate,80);}
-function setMode(m){mode=m;document.getElementById('panel-calc').style.display=m==='calc'?'':'none';document.getElementById('panel-count').style.display=m==='count'?'':'none';document.getElementById('tab-calc').classList.toggle('active',m==='calc');document.getElementById('tab-count').classList.toggle('active',m==='count');}
-function setDir(d){dir=d;document.getElementById('dir-after').classList.toggle('active',d==='after');document.getElementById('dir-before').classList.toggle('active',d==='before');}
-function setDays(n){document.getElementById('calc-days').value=n;highlightChip(n);}
-function highlightChip(n){document.querySelectorAll('#chips-calc .chip').forEach(c=>{c.classList.toggle('active',parseInt(c.textContent)===n);});}
-function setToday(){const t=todayISO();document.getElementById('calc-start').value=t;markQD(t);}
-function setTomorrow(){const t=addDaysISO(todayISO(),1);document.getElementById('calc-start').value=t;markQD(t);}
-function clearQD(){document.getElementById('qd-today').classList.remove('active');document.getElementById('qd-tomorrow').classList.remove('active');const v=document.getElementById('calc-start').value;markQD(v);}
-function markQD(v){const t=todayISO(),tm=addDaysISO(todayISO(),1);document.getElementById('qd-today').classList.toggle('active',v===t);document.getElementById('qd-tomorrow').classList.toggle('active',v===tm);}
-function updateToggleLabel(){const on=document.getElementById('work-toggle').checked;const el=document.getElementById('toggle-label');el.textContent=on?'僅計算工作日':'計算所有天數（含假日）';el.classList.toggle('on',on);}
-function countWorkdaysRange(s,e){const[f,t]=s<=e?[s,e]:[e,s];let wd=0,we=0,hol=0;const cur=parseDate(f),end=parseDate(t);while(cur<=end){if(isHoliday(cur))hol++;else if(isWeekend(cur))we++;else wd++;cur.setDate(cur.getDate()+1);}return{wd,we,hol};}
-function findWorkdayEnd(startISO,n,direction){const d=parseDate(startISO);const step=direction==='after'?1:-1;let rem=n,we=0,hol=0;while(rem>0){d.setDate(d.getDate()+step);if(isHoliday(d)){hol++;continue;}if(isWeekend(d)){we++;continue;}rem--;}return{endISO:toISO(d),skippedWE:we,skippedHol:hol};}
-function buildWorkdayMap(s,e){const map={};const cur=parseDate(s),end=parseDate(e);let idx=0;while(cur<=end){if(isWorkday(cur)){idx++;map[toISO(cur)]=idx;}cur.setDate(cur.getDate()+1);}return map;}
-function calculate(){const workOnly=document.getElementById('work-toggle').checked;if(mode==='calc'){const startISO=document.getElementById('calc-start').value;const days=parseInt(document.getElementById('calc-days').value)||0;if(!startISO||!days)return;let resultISO,skippedWE=0,skippedHol=0;if(workOnly){({endISO:resultISO,skippedWE,skippedHol}=findWorkdayEnd(startISO,days,dir));}else{resultISO=addDaysISO(startISO,dir==='after'?days:-days);}const[rangeS,rangeE]=startISO<=resultISO?[startISO,resultISO]:[resultISO,startISO];const{wd,we,hol}=countWorkdaysRange(rangeS,rangeE);const totalCal=Math.abs(diffDays(startISO,resultISO));const wdMap=buildWorkdayMap(rangeS,rangeE);updateURL({mode:'calc',start:startISO,days,dir,work:workOnly});renderCalc({startISO,resultISO,days,workOnly,wd,we:we+skippedWE,hol:hol+skippedHol,totalCal,wdMap,rangeS,rangeE});}else{const startISO=document.getElementById('count-start').value;const endISO=document.getElementById('count-end').value;if(!startISO||!endISO)return;const[rangeS,rangeE]=startISO<=endISO?[startISO,endISO]:[endISO,startISO];const{wd,we,hol}=countWorkdaysRange(rangeS,rangeE);const totalCal=Math.abs(diffDays(startISO,endISO));const wdMap=buildWorkdayMap(rangeS,rangeE);updateURL({mode:'count',start:startISO,end:endISO,work:workOnly});renderCount({startISO,endISO,workOnly,wd,we,hol,totalCal,wdMap,rangeS,rangeE});}document.getElementById('no-result').style.display='none';document.getElementById('result-area').style.display='';}
-function renderCalc({startISO,resultISO,days,workOnly,wd,we,hol,totalCal,wdMap,rangeS,rangeE}){const isHol=isHoliday(parseDate(resultISO));const isWE=isWeekend(parseDate(resultISO));const warn=!workOnly&&(isHol?` <small style="color:var(--holiday)">⚠ 國定假日</small>`:isWE?` <small style="color:var(--weekend)">⚠ 週末</small>`:'');const label=(dir==='after'?'往後 ':'往前 ')+days+(workOnly?'個工作天':'天');document.getElementById('result-area').innerHTML=`<div class="result-header"><div class="result-from">${formatFull(startISO)} ＋ ${label}</div><div class="result-big">${resultISO.replace(/-/g,' / ')}${warn||''}</div><div class="result-sub">${formatFull(resultISO)}</div></div><div class="stats-row"><div class="stat" style="animation-delay:.0s"><div class="stat-n acc">${totalCal}</div><div class="stat-l">日曆天</div></div><div class="stat" style="animation-delay:.05s"><div class="stat-n">${wd}</div><div class="stat-l">工作天</div></div><div class="stat" style="animation-delay:.1s"><div class="stat-n hol">${hol}</div><div class="stat-l">國定假日</div></div><div class="stat" style="animation-delay:.15s"><div class="stat-n wkd">${we}</div><div class="stat-l">週末天數</div></div></div>${renderAllMonths(rangeS,rangeE,startISO,resultISO,wdMap)}${renderShareBar()}`;}
-function renderCount({startISO,endISO,workOnly,wd,we,hol,totalCal,wdMap,rangeS,rangeE}){const display=workOnly?wd:totalCal;const unit=workOnly?'工作天':'日曆天';document.getElementById('result-area').innerHTML=`<div class="result-header"><div class="result-from">${formatFull(startISO)} → ${formatFull(endISO)}</div><div class="result-big">${display} <span style="font-size:1.5rem;font-weight:600">${unit}</span></div><div class="result-sub">${startISO} ～ ${endISO}</div></div><div class="stats-row"><div class="stat"><div class="stat-n acc">${totalCal}</div><div class="stat-l">日曆天</div></div><div class="stat"><div class="stat-n">${wd}</div><div class="stat-l">工作天</div></div><div class="stat"><div class="stat-n hol">${hol}</div><div class="stat-l">國定假日</div></div><div class="stat"><div class="stat-n wkd">${we}</div><div class="stat-l">週末天數</div></div></div>${renderAllMonths(rangeS,rangeE,startISO,endISO,wdMap)}${renderShareBar()}`;}
-let _rangeS,_rangeE,_hiStart,_hiEnd,_wdMap;
-function renderAllMonths(rangeS,rangeE,hiStart,hiEnd,wdMap){_rangeS=rangeS;_rangeE=rangeE;_hiStart=hiStart;_hiEnd=hiEnd;_wdMap=wdMap;const months=[];const s=parseDate(rangeS),e=parseDate(rangeE);let y=s.getFullYear(),m=s.getMonth();while(new Date(y,m,1)<=e){months.push([y,m]);m++;if(m>11){m=0;y++;}}const html=months.map(([y,m])=>buildMonthHTML(y,m)).join('');return`<div class="months-wrap">${html}</div><div class="legend"><span class="legend-item"><span class="dot acc"></span> 起始/結果</span><span class="legend-item"><span class="dot num"></span> 工作天序號</span><span class="legend-item"><span class="dot hol"></span> 國定假日</span><span class="legend-item"><span class="dot wkd"></span> 週末</span></div>`;}
-const MONTH_NAMES=['一','二','三','四','五','六','七','八','九','十','十一','十二'];
-function buildMonthHTML(year,month){const today=todayISO();const first=new Date(year,month,1);const startWD=(first.getDay()+6)%7;const daysInMonth=new Date(year,month+1,0).getDate();let cells='';for(let i=0;i<startWD;i++)cells+=`<div></div>`;for(let d=1;d<=daysInMonth;d++){const iso=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const date=parseDate(iso);const dow=date.getDay();const isWE=dow===0||dow===6;const isHol=!!TW_HOLIDAYS[iso];const holName=TW_HOLIDAYS[iso]||'';const isResult=iso===_hiEnd;const isStart=iso===_hiStart;const inRange=iso>_rangeS&&iso<_rangeE;const isToday=iso===today;const wdNum=_wdMap[iso];let cls='cal-cell';if(isResult)cls+=' is-result';else if(isStart)cls+=' is-start';else if(inRange)cls+=' in-range';if(!isResult&&!isStart){if(isHol)cls+=' is-holiday';else if(isWE)cls+=' is-weekend';else if(isToday)cls+=' is-today';}const badge=(wdNum&&!isResult)?`<span class="day-num-badge">${wdNum}</span>`:'';const dattr=isHol?` data-hname="${holName}"`:'';cells+=`<div class="${cls}"${dattr}>${badge}${d}</div>`;}return`<div class="cal-section"><div class="cal-nav-bar"><div class="cal-title">${year} 年 ${MONTH_NAMES[month]} 月</div></div><div class="cal-grid"><div class="cal-dow">一</div><div class="cal-dow">二</div><div class="cal-dow">三</div><div class="cal-dow">四</div><div class="cal-dow">五</div><div class="cal-dow is-sat">六</div><div class="cal-dow is-sun">日</div>${cells}</div></div>`;}
-function renderShareBar(){return`<div class="share-bar"><input class="share-input" id="share-url" readonly value="${buildShareURL()}" onclick="this.select()"><button class="btn-copy" id="btn-copy" onclick="copyURL()">複製連結</button></div>`;}
-function buildShareURL(){return location.origin+location.pathname+(location.search||'');}
-function updateURL(params){const p=new URLSearchParams();Object.entries(params).forEach(([k,v])=>p.set(k,v));history.replaceState(null,'','?'+p.toString());}
-function copyURL(){const url=location.href;navigator.clipboard?.writeText(url).catch(()=>{});const b=document.getElementById('btn-copy');b.textContent='已複製 ✓';b.classList.add('ok');setTimeout(()=>{b.textContent='複製連結';b.classList.remove('ok');},2200);}
-document.addEventListener('keydown',e=>{if(e.key==='Enter')calculate();});
-document.getElementById('calc-days').addEventListener('input',()=>{highlightChip(parseInt(document.getElementById('calc-days').value));});
+const TW_HOLIDAYS = {
+  '2024-01-01':'元旦',
+  '2024-02-08':'春節','2024-02-09':'春節','2024-02-10':'春節','2024-02-11':'春節',
+  '2024-02-12':'春節','2024-02-13':'春節','2024-02-14':'春節',
+  '2024-02-28':'和平紀念日',
+  '2024-04-04':'兒童節/清明','2024-04-05':'清明節',
+  '2024-05-01':'勞動節','2024-06-10':'端午節',
+  '2024-09-17':'中秋節','2024-10-10':'國慶日',
+  '2025-01-01':'元旦',
+  '2025-01-27':'春節','2025-01-28':'春節','2025-01-29':'春節','2025-01-30':'春節',
+  '2025-01-31':'春節','2025-02-01':'春節','2025-02-02':'春節',
+  '2025-02-28':'和平紀念日',
+  '2025-04-03':'兒童節','2025-04-04':'清明節',
+  '2025-05-01':'勞動節','2025-05-30':'端午補假','2025-05-31':'端午節',
+  '2025-10-06':'中秋節','2025-10-10':'國慶日',
+  '2026-01-01':'元旦',
+  '2026-02-17':'春節','2026-02-18':'春節','2026-02-19':'春節','2026-02-20':'春節',
+  '2026-02-21':'春節','2026-02-22':'春節','2026-02-23':'春節',
+  '2026-02-28':'和平紀念日','2026-04-04':'兒童節/清明',
+  '2026-05-01':'勞動節','2026-06-19':'端午節',
+  '2026-09-25':'中秋節','2026-10-10':'國慶日',
+  '2027-01-01':'元旦',
+  '2027-02-06':'春節','2027-02-07':'春節','2027-02-08':'春節','2027-02-09':'春節',
+  '2027-02-10':'春節','2027-02-11':'春節','2027-02-12':'春節',
+  '2027-02-28':'和平紀念日','2027-04-03':'兒童節','2027-04-05':'清明節',
+  '2027-05-01':'勞動節','2027-06-09':'端午節',
+  '2027-09-15':'中秋節','2027-10-10':'國慶日',
+};
+
+let mode = 'calc';
+let dir  = 'after';
+let calBaseYear, calBaseMonth;
+let calcState  = null;
+let countPhase = 0;
+
+const todayISO  = () => toISO(new Date());
+const toISO     = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parseDate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+const addDaysISO= (iso,n) => { const d=parseDate(iso); d.setDate(d.getDate()+n); return toISO(d); };
+const diffDays  = (a,b) => Math.round((parseDate(b)-parseDate(a))/86400000);
+const isWeekend = d => [0,6].includes(d.getDay());
+const isHoliday = d => !!TW_HOLIDAYS[toISO(d)];
+const isWorkday = d => !isWeekend(d) && !isHoliday(d);
+
+function addMonths(y, m, n) {
+  m += n;
+  while (m > 11) { m -= 12; y++; }
+  while (m <  0) { m += 12; y--; }
+  return [y, m];
+}
+
+const WD  = ['日','一','二','三','四','五','六'];
+const MO  = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const fmtDate = iso => {
+  const d = parseDate(iso);
+  return `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日（${WD[d.getDay()]}）`;
+};
+
+function init() {
+  const now = new Date();
+  calBaseYear  = now.getFullYear();
+  calBaseMonth = now.getMonth();
+  const t = todayISO();
+  document.getElementById('calc-start').value  = t;
+  document.getElementById('count-start').value = t;
+  document.getElementById('count-end').value   = addDaysISO(t, 30);
+  markQD(t);
+  highlightChip(30);
+  refreshCalDisplay();
+  const p = new URLSearchParams(location.search);
+  if (p.get('start')) parseURL();
+  else setTimeout(calculate, 60);
+}
+
+function refreshCalDisplay() {
+  const [y1, m1] = [calBaseYear, calBaseMonth];
+  const [y2, m2] = addMonths(y1, m1, 1);
+  const [y3, m3] = addMonths(y1, m1, 2);
+  document.getElementById('cal-range-label').textContent =
+    `${y1} 年 ${MO[m1]} ～ ${y3} 年 ${MO[m3]}`;
+  document.getElementById('month-grid').innerHTML =
+    `<div>${buildMonthHTML(y1,m1)}</div><div>${buildMonthHTML(y2,m2)}</div><div>${buildMonthHTML(y3,m3)}</div>`;
+}
+
+function buildMonthHTML(year, month) {
+  const today   = todayISO();
+  const first   = new Date(year, month, 1);
+  const startWD = (first.getDay() + 6) % 7;
+  const dim     = new Date(year, month+1, 0).getDate();
+  const rangeS  = calcState?.rangeS;
+  const rangeE  = calcState?.rangeE;
+  const hiStart = calcState?.hiStart;
+  const hiEnd   = calcState?.hiEnd;
+  const wdMap   = calcState?.wdMap || {};
+  let cells = '';
+  for (let i = 0; i < startWD; i++) cells += '<div></div>';
+  for (let d = 1; d <= dim; d++) {
+    const iso  = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const date = parseDate(iso);
+    const dow  = date.getDay();
+    const isWE = dow === 0 || dow === 6;
+    const isHol= !!TW_HOLIDAYS[iso];
+    const hn   = TW_HOLIDAYS[iso] || '';
+    const isRes  = iso === hiEnd;
+    const isSt   = iso === hiStart;
+    const inRng  = rangeS && rangeE && iso > rangeS && iso < rangeE;
+    const isTdy  = iso === today;
+    const wdNum  = wdMap[iso];
+    let cls = 'cal-cell';
+    if (isRes)      cls += ' is-result';
+    else if (isSt)  cls += ' is-start';
+    else if (inRng) cls += ' in-range';
+    if (!isRes && !isSt) {
+      if (isHol)      cls += ' is-holiday';
+      else if (isWE)  cls += ' is-weekend';
+      else if (isTdy) cls += ' is-today';
+    }
+    const badge = (wdNum && !isRes) ? `<span class="day-num-badge">${wdNum}</span>` : '';
+    const dattr = isHol ? ` data-hname="${hn}"` : '';
+    cells += `<div class="${cls}"${dattr} onclick="pickDate('${iso}')">${badge}${d}</div>`;
+  }
+  return `
+    <div class="cal-month-title">${year} 年 ${MO[month]}</div>
+    <div class="cal-grid">
+      <div class="cal-dow">一</div><div class="cal-dow">二</div><div class="cal-dow">三</div>
+      <div class="cal-dow">四</div><div class="cal-dow">五</div>
+      <div class="cal-dow is-sat">六</div><div class="cal-dow is-sun">日</div>
+      ${cells}
+    </div>`;
+}
+
+function prevMonths() { [calBaseYear, calBaseMonth] = addMonths(calBaseYear, calBaseMonth, -3); refreshCalDisplay(); }
+function nextMonths() { [calBaseYear, calBaseMonth] = addMonths(calBaseYear, calBaseMonth,  3); refreshCalDisplay(); }
+
+function pickDate(iso) {
+  if (mode === 'calc') {
+    document.getElementById('calc-start').value = iso;
+    markQD(iso); autoCalc();
+  } else {
+    if (countPhase === 0 || countPhase === 2) {
+      document.getElementById('count-start').value = iso;
+      document.getElementById('count-end').value   = '';
+      countPhase = 1;
+      calcState  = { rangeS: iso, rangeE: iso, hiStart: iso, hiEnd: iso, wdMap: {} };
+      refreshCalDisplay();
+      document.getElementById('result-area').innerHTML = '';
+    } else {
+      const s = document.getElementById('count-start').value;
+      if (iso >= s) { document.getElementById('count-end').value = iso; }
+      else { document.getElementById('count-start').value = iso; document.getElementById('count-end').value = s; }
+      countPhase = 2; autoCalc();
+    }
+  }
+}
+
+function setMode(m) {
+  mode = m; countPhase = 0;
+  document.getElementById('panel-calc').style.display  = m === 'calc'  ? '' : 'none';
+  document.getElementById('panel-count').style.display = m === 'count' ? '' : 'none';
+  document.getElementById('tab-calc').classList.toggle('active',  m === 'calc');
+  document.getElementById('tab-count').classList.toggle('active', m === 'count');
+}
+function setDir(d) {
+  dir = d;
+  document.getElementById('dir-after').classList.toggle('active',  d === 'after');
+  document.getElementById('dir-before').classList.toggle('active', d === 'before');
+  autoCalc();
+}
+function setDays(n) { document.getElementById('calc-days').value = n; highlightChip(n); autoCalc(); }
+function onDaysInput() { highlightChip(parseInt(document.getElementById('calc-days').value)); autoCalc(); }
+function highlightChip(n) {
+  document.querySelectorAll('#chips-calc .chip').forEach(c => c.classList.toggle('active', parseInt(c.textContent) === n));
+}
+function setToday()    { const t=todayISO();             document.getElementById('calc-start').value=t; markQD(t); autoCalc(); }
+function setTomorrow() { const t=addDaysISO(todayISO(),1); document.getElementById('calc-start').value=t; markQD(t); autoCalc(); }
+function clearQD() { markQD(document.getElementById('calc-start').value); }
+function markQD(v) {
+  const t=todayISO(), tm=addDaysISO(todayISO(),1);
+  document.getElementById('qd-today').classList.toggle('active',    v===t);
+  document.getElementById('qd-tomorrow').classList.toggle('active', v===tm);
+}
+function autoCalc() {
+  if (mode === 'calc') { if (!document.getElementById('calc-start').value) return; }
+  else { if (!document.getElementById('count-start').value || !document.getElementById('count-end').value) return; }
+  calculate();
+}
+
+function countWorkdaysRange(s, e) {
+  let wd=0, we=0, hol=0;
+  const cur=parseDate(s), end=parseDate(e);
+  while (cur<=end) {
+    if (isHoliday(cur)) hol++;
+    else if (isWeekend(cur)) we++;
+    else wd++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return {wd,we,hol};
+}
+function findWorkdayEnd(startISO, n, direction) {
+  const d=parseDate(startISO), step=direction==='after'?1:-1;
+  let rem=n, we=0, hol=0;
+  while (rem>0) {
+    d.setDate(d.getDate()+step);
+    if (isHoliday(d)) { hol++; continue; }
+    if (isWeekend(d)) { we++;  continue; }
+    rem--;
+  }
+  return { endISO: toISO(d), skippedWE: we, skippedHol: hol };
+}
+function buildWorkdayMap(s, e) {
+  const map={}, cur=parseDate(s), end=parseDate(e); let idx=0;
+  while (cur<=end) { if (isWorkday(cur)) { idx++; map[toISO(cur)]=idx; } cur.setDate(cur.getDate()+1); }
+  return map;
+}
+
+function calculate() {
+  if (mode === 'calc') {
+    const startISO = document.getElementById('calc-start').value;
+    const days = parseInt(document.getElementById('calc-days').value) || 0;
+    if (!startISO || !days) return;
+    const {endISO: resultISO, skippedWE: skWE, skippedHol: skHol} = findWorkdayEnd(startISO, days, dir);
+    const [rangeS, rangeE] = startISO<=resultISO ? [startISO,resultISO] : [resultISO,startISO];
+    const {wd,we,hol} = countWorkdaysRange(rangeS, rangeE);
+    const totalCal = Math.abs(diffDays(startISO, resultISO));
+    const wdMap = buildWorkdayMap(rangeS, rangeE);
+    calcState = { rangeS, rangeE, hiStart: startISO, hiEnd: resultISO, wdMap };
+    navigateTo(startISO);
+    updateURL({ mode:'calc', start:startISO, days, dir });
+    const label = (dir==='after'?'往後 ':'往前 ')+days+' 個工作天';
+    renderCalcResult({ startISO, resultISO, label, wd, we: we+skWE, hol: hol+skHol, totalCal });
+  } else {
+    const startISO = document.getElementById('count-start').value;
+    const endISO   = document.getElementById('count-end').value;
+    if (!startISO || !endISO) return;
+    const [rangeS, rangeE] = startISO<=endISO ? [startISO,endISO] : [endISO,startISO];
+    const {wd,we,hol} = countWorkdaysRange(rangeS, rangeE);
+    const totalCal = Math.abs(diffDays(rangeS, rangeE));
+    const wdMap = buildWorkdayMap(rangeS, rangeE);
+    calcState = { rangeS, rangeE, hiStart: rangeS, hiEnd: rangeE, wdMap };
+    navigateTo(rangeS);
+    updateURL({ mode:'count', start:rangeS, end:rangeE });
+    renderCountResult({ rangeS, rangeE, display: wd, unit: '工作天', wd, we, hol, totalCal });
+  }
+}
+
+function navigateTo(iso) {
+  const d=parseDate(iso); calBaseYear=d.getFullYear(); calBaseMonth=d.getMonth(); refreshCalDisplay();
+}
+
+function renderCalcResult({ startISO, resultISO, label, wd, we, hol, totalCal }) {
+  const isHol=isHoliday(parseDate(resultISO)), isWE=isWeekend(parseDate(resultISO));
+  const warn = isHol ? ' <small style="font-size:.75rem;color:var(--holiday)">⚠ 假日</small>'
+             : isWE  ? ' <small style="font-size:.75rem;color:var(--weekend)">⚠ 週末</small>' : '';
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-card">
+      <div class="result-from">${fmtDate(startISO)} ＋ ${label}</div>
+      <div class="result-big">${resultISO.replace(/-/g,' / ')}${warn}</div>
+      <div class="result-sub">${fmtDate(resultISO)}</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n acc">${totalCal}</div><div class="stat-l">日曆天</div></div>
+      <div class="stat"><div class="stat-n">${wd}</div><div class="stat-l">工作天</div></div>
+      <div class="stat"><div class="stat-n hol">${hol}</div><div class="stat-l">假日</div></div>
+      <div class="stat"><div class="stat-n wkd">${we}</div><div class="stat-l">週末</div></div>
+    </div>
+    ${shareBar()}`;
+}
+function renderCountResult({ rangeS, rangeE, display, unit, wd, we, hol, totalCal }) {
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-card">
+      <div class="result-from">${fmtDate(rangeS)} → ${fmtDate(rangeE)}</div>
+      <div class="result-big">${display} <span style="font-size:1rem;font-weight:600">${unit}</span></div>
+      <div class="result-sub">${rangeS} ～ ${rangeE}</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n acc">${totalCal}</div><div class="stat-l">日曆天</div></div>
+      <div class="stat"><div class="stat-n">${wd}</div><div class="stat-l">工作天</div></div>
+      <div class="stat"><div class="stat-n hol">${hol}</div><div class="stat-l">假日</div></div>
+      <div class="stat"><div class="stat-n wkd">${we}</div><div class="stat-l">週末</div></div>
+    </div>
+    ${shareBar()}`;
+}
+function shareBar() {
+  return `<div class="share-bar">
+    <input class="share-input" readonly value="${location.href}" onclick="this.select()">
+    <button class="btn-copy" id="btn-copy" onclick="copyURL()">複製連結</button>
+  </div>`;
+}
+
+function updateURL(params) {
+  const p=new URLSearchParams();
+  Object.entries(params).forEach(([k,v])=>p.set(k,v));
+  history.replaceState(null,'','?'+p.toString());
+}
+function parseURL() {
+  const p=new URLSearchParams(location.search);
+  if (p.get('mode')==='count') setMode('count');
+  if (p.get('dir'))   setDir(p.get('dir'));
+  if (p.get('start')) { document.getElementById('calc-start').value=p.get('start'); document.getElementById('count-start').value=p.get('start'); markQD(p.get('start')); }
+  if (p.get('days'))  { document.getElementById('calc-days').value=p.get('days'); highlightChip(+p.get('days')); }
+  if (p.get('end'))   document.getElementById('count-end').value=p.get('end');
+  setTimeout(calculate, 80);
+}
+function copyURL() {
+  navigator.clipboard?.writeText(location.href).catch(()=>{});
+  const b=document.getElementById('btn-copy');
+  b.textContent='已複製 ✓'; b.classList.add('ok');
+  setTimeout(()=>{ b.textContent='複製連結'; b.classList.remove('ok'); }, 2200);
+}
+document.addEventListener('keydown', e => { if (e.key==='Enter') calculate(); });
 init();
 </script>
 </body>
